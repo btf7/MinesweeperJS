@@ -1,0 +1,52 @@
+body {
+    display: flex;
+    justify-content: center;
+    margin: 10px;
+}
+
+table {
+    border-style: none;
+    border-spacing: 0;
+}
+
+img {
+    display: block;
+    image-rendering: pixelated;
+    /* Make them non-selectable/draggable
+       There's no way you need all of these */
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
+
+.numdisplay {
+    display: flex;
+    justify-content: center;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 8px;
+    padding-bottom: 10px;
+}
+
+#game {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto auto auto auto;
+}
+
+#tileBoard {
+    display: grid;
+}
+
+#topbar {
+    background-color: #bdbdbd;
+    display: flex;
+    justify-content: space-between;
+}
+
+#resetbutton {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
