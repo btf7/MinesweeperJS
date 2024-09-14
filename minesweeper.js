@@ -38,14 +38,12 @@ class Tile {
     hover() {
         if (this._canReveal()) {
             this._tile.src = "imgs/0.gif";
-            console.log("hover");
         }
     }
 
     unhover() {
         if (this._canReveal()) {
             this._tile.src = "imgs/hidden.gif";
-            console.log("unhover");
         }
     }
 
