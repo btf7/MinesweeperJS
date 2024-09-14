@@ -4,11 +4,6 @@ body {
     margin: 10px;
 }
 
-table {
-    border-style: none;
-    border-spacing: 0;
-}
-
 img {
     display: block;
     image-rendering: pixelated;
