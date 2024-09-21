@@ -10,6 +10,7 @@ document.onmouseup = function(e) {
     }
 }
 
+// Calls func(j) for each j where tiles[j] is a neighbor of tiles[i]
 function forEachNeighbor(i, func) {
     toprow = i < 9;
     bottomrow = i > 71;
@@ -30,8 +31,57 @@ function forEachNeighbor(i, func) {
     }
 }
 
+function createBombs(startI) {
+    // Create 10 bombs
+
+    // Could just choose 10 random positions, repeating if there's already a bomb there,
+    // but this method could lag on large board where nearly every tile is a bomb.
+    // Therefore, create a list containing all tile indexes,
+    // randomise the order, then plant bombs on the 10 first elements
+
+    indexes = []
+    for (i = 0; i < 81; i++) {
+        indexes[i] = i;
+    }
+
+    // Remove tiles around start tile
+    toprow = startI < 9;
+    bottomrow = startI > 71;
+    leftcolumn = startI % 9 == 0;
+    rightcolumn = startI % 9 == 8;
+
+    if (!bottomrow) {
+        if (!rightcolumn) {indexes.splice(startI+10, 1);}
+        indexes.splice(startI+9, 1);
+        if (!leftcolumn) {indexes.splice(startI+8, 1);}
+    }
+    if (!rightcolumn) {indexes.splice(startI+1, 1);}
+    indexes.splice(startI, 1);
+    if (!leftcolumn) {indexes.splice(startI-1, 1);}
+    if (!toprow) {
+        if (!rightcolumn) {indexes.splice(startI-8, 1);}
+        indexes.splice(startI-9, 1);
+        if (!leftcolumn) {indexes.splice(startI-10, 1);}
+    }
+
+    // Randomise
+    for (i = 0; i < indexes.length; i++) {
+        tmp = indexes[i];
+        j = Math.round(Math.random() * (indexes.length - 1));
+        indexes[i] = indexes[j];
+        indexes[j] = tmp;
+    }
+
+    // Create bombs
+    for (i = 0; i < 10; i++) {
+        tiles[indexes[i]].bomb = true;
+        forEachNeighbor(indexes[i], function(j) {tiles[j].value++;});
+    }
+}
+
 class Tile {
-    constructor(tile) {
+    constructor(i, tile) {
+        this.index = i;
         this.hidden = true;
         this._flagged = false;
         this._tile = tile // The HTML <img> object
@@ -78,6 +128,8 @@ class Tile {
     }
 }
 
+gameStarted = false;
+
 // Create the tiles
 
 const tiles = [];
@@ -85,7 +137,7 @@ tiles.length = 81;
 
 for (let i = 0; i < 81; i++) {
     board.insertAdjacentHTML("beforeend", tileHTML);
-    tiles[i] = new Tile(board.children[i]);
+    tiles[i] = new Tile(i, board.children[i]);
 
     board.children[i].onmousedown = function(e) {
         if (e.button == 0) {
@@ -103,10 +155,10 @@ for (let i = 0; i < 81; i++) {
             }
         }
     }
+
     board.children[i].onmouseup = function(e) {
         if (leftmousedown && (e.button == 0 || (e.button == 2 && rightmousedown))) {
             if (!tiles[i].hidden) {
-                tiles[i].reveal();
                 if (rightmousedown) {
                     forEachNeighbor(i, function(j) {tiles[j].reveal();});
                 }
@@ -114,12 +166,17 @@ for (let i = 0; i < 81; i++) {
                 tiles[i].unhover();
                 forEachNeighbor(i, function(j) {tiles[j].unhover();});
             } else if (e.button == 0) {
+                if (!gameStarted) {
+                    gameStarted = true;
+                    createBombs(i);
+                }
                 tiles[i].reveal();
             }
             leftmousedown = false;
             rightmousedown = false;
         }
     }
+
     board.children[i].onmouseenter = function(e) {
         if (leftmousedown) {
             tiles[i].hover();
@@ -128,6 +185,7 @@ for (let i = 0; i < 81; i++) {
             }
         }
     }
+
     board.children[i].onmouseleave = function(e) {
         if (leftmousedown) {
             tiles[i].unhover();
@@ -136,26 +194,4 @@ for (let i = 0; i < 81; i++) {
             }
         }
     }
-}
-
-// Create 10 bombs
-
-// Could just choose 10 random positions, repeating if there's already a bomb there,
-// but this method could lag on large board where nearly every tile is a bomb.
-// Therefore, create a list containing all tile indexes,
-// randomise the order, then plant bombs on the 10 first elements
-
-indexes = []
-for (i = 0; i < 81; i++) {
-    indexes[i] = i;
-}
-for (i = 0; i < 81; i++) {
-    tmp = indexes[i];
-    j = Math.round(Math.random() * 80);
-    indexes[i] = indexes[j];
-    indexes[j] = tmp;
-}
-for (i = 0; i < 10; i++) {
-    tiles[indexes[i]].bomb = true;
-    forEachNeighbor(indexes[i], function(j) {tiles[j].value++;});
 }
