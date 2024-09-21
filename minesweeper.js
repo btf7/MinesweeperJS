@@ -10,14 +10,33 @@ document.onmouseup = function(e) {
     }
 }
 
-const tiles = [];
-tiles.length = 81;
+function forEachNeighbor(i, func) {
+    toprow = i < 9;
+    bottomrow = i > 71;
+    leftcolumn = i % 9 == 0;
+    rightcolumn = i % 9 == 8;
+
+    if (!toprow) {
+        if (!leftcolumn) {func(i-10);}
+        func(i-9);
+        if (!rightcolumn) {func(i-8);}
+    }
+    if (!leftcolumn) {func(i-1);}
+    if (!rightcolumn) {func(i+1);}
+    if (!bottomrow) {
+        if (!leftcolumn) {func(i+8);}
+        func(i+9);
+        if (!rightcolumn) {func(i+10);}
+    }
+}
 
 class Tile {
     constructor(tile) {
         this.hidden = true;
         this._flagged = false;
         this._tile = tile // The HTML <img> object
+        this.value = 0;
+        this.bomb = false;
     }
 
     _canReveal() {
@@ -50,76 +69,22 @@ class Tile {
     reveal() {
         if (this._canReveal()) {
             this.hidden = false;
-            this._tile.src = "imgs/1.gif";
+            if (this.bomb) {
+                this._tile.src = "imgs/bomb-clicked.gif";
+            } else {
+                this._tile.src = "imgs/" + this.value + ".gif";
+            }
         }
     }
 }
 
-function hoverNeighbors(i) {
-    toprow = i < 9;
-    bottomrow = i > 71;
-    leftcolumn = i % 9 == 0;
-    rightcolumn = i % 9 == 8;
+// Create the tiles
 
-    if (!toprow) {
-        if (!leftcolumn) {tiles[i-10].hover();}
-        tiles[i-9].hover();
-        if (!rightcolumn) {tiles[i-8].hover();}
-    }
-    if (!leftcolumn) {tiles[i-1].hover();}
-    if (!rightcolumn) {tiles[i+1].hover();}
-    if (!bottomrow) {
-        if (!leftcolumn) {tiles[i+8].hover();}
-        tiles[i+9].hover();
-        if (!rightcolumn) {tiles[i+10].hover();}
-    }
-}
-
-function unhoverNeighbors(i) {
-    toprow = i < 9;
-    bottomrow = i > 71;
-    leftcolumn = i % 9 == 0;
-    rightcolumn = i % 9 == 8;
-
-    if (!toprow) {
-        if (!leftcolumn) {tiles[i-10].unhover();}
-        tiles[i-9].unhover();
-        if (!rightcolumn) {tiles[i-8].unhover();}
-    }
-    if (!leftcolumn) {tiles[i-1].unhover();}
-    if (!rightcolumn) {tiles[i+1].unhover();}
-    if (!bottomrow) {
-        if (!leftcolumn) {tiles[i+8].unhover();}
-        tiles[i+9].unhover();
-        if (!rightcolumn) {tiles[i+10].unhover();}
-    }
-}
-
-function revealNeighbors(i) {
-    toprow = i < 9;
-    bottomrow = i > 71;
-    leftcolumn = i % 9 == 0;
-    rightcolumn = i % 9 == 8;
-
-    if (!toprow) {
-        if (!leftcolumn) {tiles[i-10].reveal();}
-        tiles[i-9].reveal();
-        if (!rightcolumn) {tiles[i-8].reveal();}
-    }
-    if (!leftcolumn) {tiles[i-1].reveal();}
-    if (!rightcolumn) {tiles[i+1].reveal();}
-    if (!bottomrow) {
-        if (!leftcolumn) {tiles[i+8].reveal();}
-        tiles[i+9].reveal();
-        if (!rightcolumn) {tiles[i+10].reveal();}
-    }
-}
+const tiles = [];
+tiles.length = 81;
 
 for (let i = 0; i < 81; i++) {
-    board.innerHTML += tileHTML;
-}
-
-for (let i = 0; i < 81; i++) {
+    board.insertAdjacentHTML("beforeend", tileHTML);
     tiles[i] = new Tile(board.children[i]);
 
     board.children[i].onmousedown = function(e) {
@@ -127,12 +92,12 @@ for (let i = 0; i < 81; i++) {
             leftmousedown = true;
             tiles[i].hover();
             if (rightmousedown) {
-                hoverNeighbors(i);
+                forEachNeighbor(i, function(j) {tiles[j].hover();});
             }
         } else if (e.button == 2) {
             rightmousedown = true;
             if (leftmousedown) {
-                hoverNeighbors(i);
+                forEachNeighbor(i, function(j) {tiles[j].hover();});
             } else {
                 tiles[i].flag();
             }
@@ -143,11 +108,11 @@ for (let i = 0; i < 81; i++) {
             if (!tiles[i].hidden) {
                 tiles[i].reveal();
                 if (rightmousedown) {
-                    revealNeighbors(i);
+                    forEachNeighbor(i, function(j) {tiles[j].reveal();});
                 }
             } else if (rightmousedown) {
                 tiles[i].unhover();
-                unhoverNeighbors(i);
+                forEachNeighbor(i, function(j) {tiles[j].unhover();});
             } else if (e.button == 0) {
                 tiles[i].reveal();
             }
@@ -159,7 +124,7 @@ for (let i = 0; i < 81; i++) {
         if (leftmousedown) {
             tiles[i].hover();
             if (rightmousedown) {
-                hoverNeighbors(i);
+                forEachNeighbor(i, function(j) {tiles[j].hover();});
             }
         }
     }
@@ -167,8 +132,30 @@ for (let i = 0; i < 81; i++) {
         if (leftmousedown) {
             tiles[i].unhover();
             if (rightmousedown) {
-                unhoverNeighbors(i);
+                forEachNeighbor(i, function(j) {tiles[j].unhover();});
             }
         }
     }
+}
+
+// Create 10 bombs
+
+// Could just choose 10 random positions, repeating if there's already a bomb there,
+// but this method could lag on large board where nearly every tile is a bomb.
+// Therefore, create a list containing all tile indexes,
+// randomise the order, then plant bombs on the 10 first elements
+
+indexes = []
+for (i = 0; i < 81; i++) {
+    indexes[i] = i;
+}
+for (i = 0; i < 81; i++) {
+    tmp = indexes[i];
+    j = Math.round(Math.random() * 80);
+    indexes[i] = indexes[j];
+    indexes[j] = tmp;
+}
+for (i = 0; i < 10; i++) {
+    tiles[indexes[i]].bomb = true;
+    forEachNeighbor(indexes[i], function(j) {tiles[j].value++;});
 }
