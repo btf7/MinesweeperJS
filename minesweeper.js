@@ -38,16 +38,16 @@ function createBombs(startI) {
     // Therefore, create a list containing all tile indexes,
     // randomise the order, then plant bombs on the 10 first elements
 
-    indexes = []
+    const indexes = []
     for (i = 0; i < 81; i++) {
         indexes[i] = i;
     }
 
     // Remove tiles around start tile
-    toprow = startI < 9;
-    bottomrow = startI > 71;
-    leftcolumn = startI % 9 == 0;
-    rightcolumn = startI % 9 == 8;
+    let toprow = startI < 9;
+    let bottomrow = startI > 71;
+    let leftcolumn = startI % 9 == 0;
+    let rightcolumn = startI % 9 == 8;
 
     if (!bottomrow) {
         if (!rightcolumn) {indexes.splice(startI+10, 1);}
@@ -65,8 +65,8 @@ function createBombs(startI) {
 
     // Randomise
     for (i = 0; i < indexes.length; i++) {
-        tmp = indexes[i];
-        j = Math.round(Math.random() * (indexes.length - 1));
+        let tmp = indexes[i];
+        let j = Math.round(Math.random() * (indexes.length - 1));
         indexes[i] = indexes[j];
         indexes[j] = tmp;
     }
@@ -130,7 +130,7 @@ class Tile {
     }
 }
 
-gameStarted = false;
+var gameStarted = false;
 
 // Create the tiles
 
