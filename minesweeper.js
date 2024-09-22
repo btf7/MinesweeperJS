@@ -12,11 +12,10 @@ document.onmouseup = function(e) {
 
 // Calls func(j) for each j where tiles[j] is a neighbor of tiles[i]
 function forEachNeighbor(i, func) {
-    toprow = i < 9;
-    bottomrow = i > 71;
-    leftcolumn = i % 9 == 0;
-    rightcolumn = i % 9 == 8;
-
+    let toprow = i < 9;
+    let bottomrow = i > 71;
+    let leftcolumn = i % 9 == 0;
+    let rightcolumn = i % 9 == 8;
     if (!toprow) {
         if (!leftcolumn) {func(i-10);}
         func(i-9);
@@ -123,6 +122,9 @@ class Tile {
                 this._tile.src = "imgs/bomb-clicked.gif";
             } else {
                 this._tile.src = "imgs/" + this.value + ".gif";
+                if (this.value == 0) {
+                    forEachNeighbor(this.index, function(j) {tiles[j].reveal();});
+                }
             }
         }
     }
