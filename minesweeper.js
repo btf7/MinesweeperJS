@@ -12,10 +12,11 @@ document.onmouseup = function(e) {
 
 // Calls func(j) for each j where tiles[j] is a neighbor of tiles[i]
 function forEachNeighbor(i, func) {
-    let toprow = i < 9;
-    let bottomrow = i > 71;
-    let leftcolumn = i % 9 == 0;
-    let rightcolumn = i % 9 == 8;
+    const toprow = i < 9;
+    const bottomrow = i > 71;
+    const leftcolumn = i % 9 == 0;
+    const rightcolumn = i % 9 == 8;
+
     if (!toprow) {
         if (!leftcolumn) {func(i-10);}
         func(i-9);
@@ -44,10 +45,11 @@ function createBombs(startI) {
     }
 
     // Remove tiles around start tile
-    let toprow = startI < 9;
-    let bottomrow = startI > 71;
-    let leftcolumn = startI % 9 == 0;
-    let rightcolumn = startI % 9 == 8;
+    // Can't use forEachNeighbor() as we also have to splice the centre tile, and order matters
+    const toprow = startI < 9;
+    const bottomrow = startI > 71;
+    const leftcolumn = startI % 9 == 0;
+    const rightcolumn = startI % 9 == 8;
 
     if (!bottomrow) {
         if (!rightcolumn) {indexes.splice(startI+10, 1);}
@@ -82,24 +84,24 @@ class Tile {
     constructor(i, tile) {
         this.index = i;
         this.hidden = true;
-        this._flagged = false;
+        this.flagged = false;
         this._tile = tile // The HTML <img> object
         this.value = 0;
         this.bomb = false;
     }
 
     _canReveal() {
-        return this.hidden && !this._flagged;
+        return this.hidden && !this.flagged;
     }
 
     flag() {
         if (this.hidden) {
-            if (this._flagged) {
+            if (this.flagged) {
                 this._tile.src = "imgs/hidden.gif";
             } else {
                 this._tile.src = "imgs/flag.gif";
             }
-            this._flagged = !this._flagged;
+            this.flagged = !this.flagged;
         }
     }
 
@@ -141,14 +143,14 @@ for (let i = 0; i < 81; i++) {
     board.insertAdjacentHTML("beforeend", tileHTML);
     tiles[i] = new Tile(i, board.children[i]);
 
-    board.children[i].onmousedown = function(e) {
-        if (e.button == 0) {
+    board.children[i].onmousedown = function(event) {
+        if (event.button == 0) {
             leftmousedown = true;
             tiles[i].hover();
             if (rightmousedown) {
                 forEachNeighbor(i, function(j) {tiles[j].hover();});
             }
-        } else if (e.button == 2) {
+        } else if (event.button == 2) {
             rightmousedown = true;
             if (leftmousedown) {
                 forEachNeighbor(i, function(j) {tiles[j].hover();});
@@ -158,16 +160,16 @@ for (let i = 0; i < 81; i++) {
         }
     }
 
-    board.children[i].onmouseup = function(e) {
-        if (leftmousedown && (e.button == 0 || (e.button == 2 && rightmousedown))) {
-            if (!tiles[i].hidden) {
-                if (rightmousedown) {
+    board.children[i].onmouseup = function(event) {
+        if (leftmousedown && (event.button == 0 || event.button == 2)) {
+            if (rightmousedown) {
+                if (!tiles[i].hidden) {
                     forEachNeighbor(i, function(j) {tiles[j].reveal();});
+                } else {
+                    tiles[i].unhover();
+                    forEachNeighbor(i, function(j) {tiles[j].unhover();});
                 }
-            } else if (rightmousedown) {
-                tiles[i].unhover();
-                forEachNeighbor(i, function(j) {tiles[j].unhover();});
-            } else if (e.button == 0) {
+            } else if (event.button == 0) {
                 if (!gameStarted) {
                     gameStarted = true;
                     createBombs(i);
@@ -179,7 +181,7 @@ for (let i = 0; i < 81; i++) {
         }
     }
 
-    board.children[i].onmouseenter = function(e) {
+    board.children[i].onmouseenter = function(event) {
         if (leftmousedown) {
             tiles[i].hover();
             if (rightmousedown) {
@@ -188,7 +190,7 @@ for (let i = 0; i < 81; i++) {
         }
     }
 
-    board.children[i].onmouseleave = function(e) {
+    board.children[i].onmouseleave = function(event) {
         if (leftmousedown) {
             tiles[i].unhover();
             if (rightmousedown) {
