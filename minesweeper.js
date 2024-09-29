@@ -2,6 +2,10 @@ const board = document.getElementById("tileBoard");
 const tileHTML = '<img src="imgs/hidden.gif" alt="tile" width="32" height="32" draggable="false" (dragstart)="false;">';
 var leftmousedown = false;
 var rightmousedown = false;
+var gameStarted = false;
+const mineCount = 10;
+const tiles = [];
+tiles.length = 81;
 
 document.onmouseup = function(e) {
     if (e.button == 0 || e.button == 2) {
@@ -66,15 +70,16 @@ function createBombs(startI) {
     }
 
     // Randomise
-    for (i = 0; i < indexes.length; i++) {
-        let tmp = indexes[i];
-        let j = Math.round(Math.random() * (indexes.length - 1));
+    // Only have to randomise first (mineCount) elements
+    for (i = 0; i < mineCount; i++) {
+        const tmp = indexes[i];
+        const j = Math.round(Math.random() * (indexes.length - 1));
         indexes[i] = indexes[j];
         indexes[j] = tmp;
     }
 
     // Create bombs
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < mineCount; i++) {
         tiles[indexes[i]].bomb = true;
         forEachNeighbor(indexes[i], function(j) {tiles[j].value++;});
     }
@@ -132,13 +137,7 @@ class Tile {
     }
 }
 
-var gameStarted = false;
-
 // Create the tiles
-
-const tiles = [];
-tiles.length = 81;
-
 for (let i = 0; i < 81; i++) {
     board.insertAdjacentHTML("beforeend", tileHTML);
     tiles[i] = new Tile(i, board.children[i]);
