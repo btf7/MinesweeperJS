@@ -163,7 +163,12 @@ for (let i = 0; i < 81; i++) {
     board.children[i].onmouseup = function(event) {
         if (leftmousedown && (event.button == 0 || event.button == 2)) {
             if (rightmousedown) {
-                if (!tiles[i].hidden) {
+                // You can only reveal a 3x3 area if the
+                // number of flags around the tile is correct
+                let flags = 0;
+                forEachNeighbor(i, function(j) {if (tiles[j].flagged) {flags++;}});
+
+                if (!tiles[i].hidden && flags == tiles[i].value) {
                     forEachNeighbor(i, function(j) {tiles[j].reveal();});
                 } else {
                     tiles[i].unhover();
