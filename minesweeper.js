@@ -159,6 +159,7 @@ class Tile {
 
 document.onmouseup = function(event) {
     if (event.button == 0 || event.button == 2) {
+        resetButton.src = "imgs/button-normal.gif";
         leftMouseDown = false;
         rightMouseDown = false;
         resetButtonMouseDown = false;
@@ -206,6 +207,7 @@ for (let i = 0; i < 81; i++) {
     board.children[i].onmousedown = function(event) {
         if (event.button == 0) {
             leftMouseDown = true;
+            resetButton.src = "imgs/button-warn.gif";
             tiles[i].hover();
             if (rightMouseDown) {
                 forEachNeighbor(i, function(j) {tiles[j].hover();});
@@ -242,8 +244,6 @@ for (let i = 0; i < 81; i++) {
                 }
                 tiles[i].reveal();
             }
-            leftMouseDown = false;
-            rightMouseDown = false;
         }
     }
 
