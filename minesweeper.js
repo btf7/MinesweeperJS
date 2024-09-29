@@ -1,9 +1,13 @@
 const board = document.getElementById("tileBoard");
+const mineCountHundreds = document.getElementById("minehundreds");
+const mineCountTens = document.getElementById("minetens");
+const mineCountOnes = document.getElementById("mineones");
 const tileHTML = '<img src="imgs/hidden.gif" alt="tile" width="32" height="32" draggable="false" (dragstart)="false;">';
 var leftmousedown = false;
 var rightmousedown = false;
 var gameStarted = false;
 const mineCount = 10;
+var flagCount = 0;
 const tiles = [];
 tiles.length = 81;
 
@@ -85,6 +89,17 @@ function createBombs(startI) {
     }
 }
 
+function updateMineCount() {
+    let remainingMines = mineCount - flagCount;
+    if (remainingMines < 0) {
+        mineCountHundreds.src = "imgs/number-.gif";
+    } else {
+        mineCountHundreds.src = "imgs/number" + Math.floor(remainingMines / 100) % 10 + ".gif";
+    }
+    mineCountTens.src = "imgs/number" + Math.floor(Math.abs(remainingMines) / 10 % 10) + ".gif";
+    mineCountOnes.src = "imgs/number" + Math.abs(remainingMines) % 10 + ".gif";
+}
+
 class Tile {
     constructor(i, tile) {
         this.index = i;
@@ -102,9 +117,11 @@ class Tile {
     flag() {
         if (this.hidden) {
             if (this.flagged) {
-                this._tile.src = "imgs/hidden.gif";
+                this._tile.src = "imgs/hidden.gif"
+                flagCount--;
             } else {
                 this._tile.src = "imgs/flag.gif";
+                flagCount++;
             }
             this.flagged = !this.flagged;
         }
@@ -155,6 +172,7 @@ for (let i = 0; i < 81; i++) {
                 forEachNeighbor(i, function(j) {tiles[j].hover();});
             } else {
                 tiles[i].flag();
+                updateMineCount();
             }
         }
     }
@@ -203,3 +221,5 @@ for (let i = 0; i < 81; i++) {
         }
     }
 }
+
+updateMineCount();
