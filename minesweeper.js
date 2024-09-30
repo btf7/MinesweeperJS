@@ -2,14 +2,22 @@ const board = document.getElementById("tileBoard");
 const mineCountHundreds = document.getElementById("minehundreds");
 const mineCountTens = document.getElementById("minetens");
 const mineCountOnes = document.getElementById("mineones");
-const resetButton = document.getElementById("resetbutton");
+const button = document.getElementById("resetbutton");
 const tileHTML = '<img src="imgs/hidden.gif" alt="tile" width="32" height="32" draggable="false" (dragstart)="false;">';
+
+// Why does JS not have enums??
+const gameNotStarted = 0;
+const gamePlaying = 1;
+const gameWon = 2;
+const gameLost = 3;
+
 var leftMouseDown = false;
 var rightMouseDown = false;
-var resetButtonMouseDown = false;
-var gameStarted = false;
+var buttonMouseDown = false;
+var gameState = gameNotStarted;
 const mineCount = 10;
 var flagCount = 0;
+var hiddenTilesRemaining = 71;
 const tiles = [];
 tiles.length = 81;
 
@@ -95,6 +103,26 @@ function updateMineCount() {
     mineCountOnes.src = "imgs/number" + Math.abs(remainingMines) % 10 + ".gif";
 }
 
+function setButtonImage() {
+    if (gameState == gameLost) {
+        button.src = "imgs/button-fail.gif";
+    } else if (gameState == gameWon) {
+        button.src = "imgs/button-victory.gif";
+    } else {
+        button.src = "imgs/button-normal.gif";
+    }
+}
+
+function setButtonPressedImage() {
+    if (gameState == gameLost) {
+        button.src = "imgs/button-fail-pressed.gif";
+    } else if (gameState == gameWon) {
+        button.src = "imgs/button-victory-pressed.gif";
+    } else {
+        button.src = "imgs/button-normal-pressed.gif";
+    }
+}
+
 class Tile {
     constructor(i, tile) {
         this.index = i;
@@ -147,56 +175,77 @@ class Tile {
             this.hidden = false;
             if (this.bomb) {
                 this._tile.src = "imgs/bomb-clicked.gif";
+                gameState = gameLost;
             } else {
                 this._tile.src = "imgs/" + this.value + ".gif";
                 if (this.value == 0) {
                     forEachNeighbor(this.index, function(j) {tiles[j].reveal();});
                 }
+                // 3x3 reveal could result in a move where we reveal a bomb, but also reveal the correct number of tiles to win
+                // Therefore you must check if we have lost before declaring a victory
+                if (--hiddenTilesRemaining == 0 && gameState != gameLost) {
+                    gameState = gameWon;
+                }
             }
+        }
+    }
+
+    revealBomb() {
+        if (this.bomb) {
+            if (this.hidden && !this.flagged) {
+                this._tile.src = "imgs/bomb.gif";
+            }
+        } else if (this.flagged) {
+            this._tile.src = "imgs/flag-wrong.gif";
+        }
+    }
+
+    showFlag() {
+        if (this.bomb) {
+            this._tile.src = "imgs/flag.gif";
         }
     }
 }
 
 document.onmouseup = function(event) {
     if (event.button == 0 || event.button == 2) {
-        resetButton.src = "imgs/button-normal.gif";
+        setButtonImage();
         leftMouseDown = false;
         rightMouseDown = false;
-        resetButtonMouseDown = false;
+        buttonMouseDown = false;
     }
 }
 
-resetButton.onmousedown = function(event) {
+button.onmousedown = function(event) {
     if (event.button == 0) {
-        resetButtonMouseDown = true;
-        resetButton.src = "imgs/button-pressed.gif";
+        buttonMouseDown = true;
+        setButtonPressedImage();
     }
 }
 
-resetButton.onmouseenter = function(event) {
-    if (resetButtonMouseDown) {
-        resetButton.src = "imgs/button-pressed.gif";
+button.onmouseenter = function(event) {
+    if (buttonMouseDown) {
+        setButtonPressedImage();
     }
 }
 
-resetButton.onmouseleave = function(event) {
-    if (resetButtonMouseDown) {
-        resetButton.src = "imgs/button-normal.gif";
+button.onmouseleave = function(event) {
+    if (buttonMouseDown) {
+        setButtonImage();
     }
 }
 
-resetButton.onmouseup = function(event) {
-    if (resetButtonMouseDown && event.button == 0) {
-        resetButton.src = "imgs/button-normal.gif";
+button.onmouseup = function(event) {
+    if (buttonMouseDown && event.button == 0) {
         // Reset the board
         for (let i = 0; i < 81; i++) {
             tiles[i].reset();
         }
-        gameStarted = false;
+        gameState = gameNotStarted;
         flagCount = 0;
+        hiddenTilesRemaining = 71;
         updateMineCount();
     }
-    resetButtonMouseDown = false;
 }
 
 // Create the tiles
@@ -205,9 +254,13 @@ for (let i = 0; i < 81; i++) {
     tiles[i] = new Tile(i, board.children[i]);
 
     board.children[i].onmousedown = function(event) {
+        if (gameState == gameWon || gameState == gameLost) {
+            return;
+        }
+
         if (event.button == 0) {
             leftMouseDown = true;
-            resetButton.src = "imgs/button-warn.gif";
+            button.src = "imgs/button-warn.gif";
             tiles[i].hover();
             if (rightMouseDown) {
                 forEachNeighbor(i, function(j) {tiles[j].hover();});
@@ -224,6 +277,10 @@ for (let i = 0; i < 81; i++) {
     }
 
     board.children[i].onmouseup = function(event) {
+        if (gameState == gameWon || gameState == gameLost) {
+            return;
+        }
+
         if (leftMouseDown && (event.button == 0 || event.button == 2)) {
             if (rightMouseDown) {
                 // You can only reveal a 3x3 area if the
@@ -238,11 +295,21 @@ for (let i = 0; i < 81; i++) {
                     forEachNeighbor(i, function(j) {tiles[j].unhover();});
                 }
             } else if (event.button == 0) {
-                if (!gameStarted) {
-                    gameStarted = true;
+                if (gameState == gameNotStarted) {
+                    gameState = gamePlaying;
                     createBombs(i);
                 }
                 tiles[i].reveal();
+            }
+            if (gameState == gameLost) {
+                for (let i = 0; i < 81; i++) {
+                    tiles[i].revealBomb();
+                }
+            } else if (gameState == gameWon) {
+                for (let i = 0; i < 81; i++) {
+                    tiles[i].showFlag();
+                    flagCount = mineCount;
+                }
             }
         }
     }
