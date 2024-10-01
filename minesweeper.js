@@ -309,6 +309,7 @@ for (let i = 0; i < 81; i++) {
                 for (let i = 0; i < 81; i++) {
                     tiles[i].showFlag();
                     flagCount = mineCount;
+                    updateMineCount();
                 }
             }
         }
