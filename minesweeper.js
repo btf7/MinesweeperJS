@@ -2,6 +2,9 @@ const board = document.getElementById("tileBoard");
 const mineCountHundreds = document.getElementById("minehundreds");
 const mineCountTens = document.getElementById("minetens");
 const mineCountOnes = document.getElementById("mineones");
+const timerHundreds = document.getElementById("timerhundreds");
+const timerTens = document.getElementById("timertens");
+const timerOnes = document.getElementById("timerones");
 const button = document.getElementById("resetbutton");
 const tileHTML = '<img src="imgs/hidden.gif" alt="tile" width="32" height="32" draggable="false" (dragstart)="false;">';
 
@@ -18,6 +21,8 @@ var gameState = gameNotStarted;
 const mineCount = 10;
 var flagCount = 0;
 var hiddenTilesRemaining = 71;
+var time = 0;
+var timerInterval = null;
 const tiles = [];
 tiles.length = 81;
 
@@ -104,6 +109,13 @@ function setButtonPressedImage() {
     } else {
         button.src = "imgs/button-normal-pressed.gif";
     }
+}
+
+function updateTimer() {
+    time++;
+    timerHundreds.src = "imgs/number" + Math.floor(time / 100) % 10 + ".gif";
+    timerTens.src = "imgs/number" + Math.floor(time / 10) % 10 + ".gif";
+    timerOnes.src = "imgs/number" + time % 10 + ".gif";
 }
 
 class Tile {
@@ -224,10 +236,18 @@ button.onmouseup = function(event) {
         for (let i = 0; i < 81; i++) {
             tiles[i].reset();
         }
+
         gameState = gameNotStarted;
         flagCount = 0;
         hiddenTilesRemaining = 71;
         updateMineCount();
+
+        if (timerInterval != null) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        time = -1; // updateTimer() increments it by 1
+        updateTimer();
     }
 }
 
@@ -280,14 +300,19 @@ for (let i = 0; i < 81; i++) {
                 if (gameState == gameNotStarted) {
                     gameState = gamePlaying;
                     createBombs(i);
+                    timerInterval = setInterval(updateTimer, 1000);
                 }
                 tiles[i].reveal();
             }
             if (gameState == gameLost) {
+                clearInterval(timerInterval);
+                timerInterval = null;
                 for (let i = 0; i < 81; i++) {
                     tiles[i].revealBomb();
                 }
             } else if (gameState == gameWon) {
+                clearInterval(timerInterval);
+                timerInterval = null;
                 for (let i = 0; i < 81; i++) {
                     tiles[i].showFlag();
                     flagCount = mineCount;
