@@ -22,23 +22,24 @@ const tiles = [];
 tiles.length = 81;
 
 // Calls func(j) for each j where tiles[j] is a neighbor of tiles[i]
-function forEachNeighbor(i, func) {
+function forEachNeighbor(i, func, includeCentre = false) {
     const toprow = i < 9;
     const bottomrow = i > 71;
     const leftcolumn = i % 9 == 0;
     const rightcolumn = i % 9 == 8;
 
-    if (!toprow) {
-        if (!leftcolumn) {func(i-10);}
-        func(i-9);
-        if (!rightcolumn) {func(i-8);}
-    }
-    if (!leftcolumn) {func(i-1);}
-    if (!rightcolumn) {func(i+1);}
     if (!bottomrow) {
-        if (!leftcolumn) {func(i+8);}
-        func(i+9);
         if (!rightcolumn) {func(i+10);}
+        func(i+9);
+        if (!leftcolumn) {func(i+8);}
+    }
+    if (!rightcolumn) {func(i+1);}
+    if (includeCentre) {func(i);}
+    if (!leftcolumn) {func(i-1);}
+    if (!toprow) {
+        if (!rightcolumn) {func(i-8);}
+        func(i-9);
+        if (!leftcolumn) {func(i-10);}
     }
 }
 
@@ -56,25 +57,7 @@ function createBombs(startI) {
     }
 
     // Remove tiles around start tile
-    // Can't use forEachNeighbor() as we also have to splice the centre tile, and order matters
-    const toprow = startI < 9;
-    const bottomrow = startI > 71;
-    const leftcolumn = startI % 9 == 0;
-    const rightcolumn = startI % 9 == 8;
-
-    if (!bottomrow) {
-        if (!rightcolumn) {indexes.splice(startI+10, 1);}
-        indexes.splice(startI+9, 1);
-        if (!leftcolumn) {indexes.splice(startI+8, 1);}
-    }
-    if (!rightcolumn) {indexes.splice(startI+1, 1);}
-    indexes.splice(startI, 1);
-    if (!leftcolumn) {indexes.splice(startI-1, 1);}
-    if (!toprow) {
-        if (!rightcolumn) {indexes.splice(startI-8, 1);}
-        indexes.splice(startI-9, 1);
-        if (!leftcolumn) {indexes.splice(startI-10, 1);}
-    }
+    forEachNeighbor(startI, function(j) {indexes.splice(j, 1);}, true);
 
     // Randomise
     // Only have to randomise first (mineCount) elements
@@ -182,7 +165,7 @@ class Tile {
                     forEachNeighbor(this.index, function(j) {tiles[j].reveal();});
                 }
                 // 3x3 reveal could result in a move where we reveal a bomb, but also reveal the correct number of tiles to win
-                // Therefore you must check if we have lost before declaring a victory
+                // Therefore we must check if we have lost before declaring a victory
                 if (--hiddenTilesRemaining == 0 && gameState != gameLost) {
                     gameState = gameWon;
                 }
@@ -291,8 +274,7 @@ for (let i = 0; i < 81; i++) {
                 if (!tiles[i].hidden && flags == tiles[i].value) {
                     forEachNeighbor(i, function(j) {tiles[j].reveal();});
                 } else {
-                    tiles[i].unhover();
-                    forEachNeighbor(i, function(j) {tiles[j].unhover();});
+                    forEachNeighbor(i, function(j) {tiles[j].unhover();}, true);
                 }
             } else if (event.button == 0) {
                 if (gameState == gameNotStarted) {
