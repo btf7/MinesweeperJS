@@ -1,7 +1,9 @@
 body {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     margin: 10px;
+    font-family: Arial, sans-serif;
 }
 
 img {
@@ -16,6 +18,15 @@ img {
     -ms-user-select: none;
 }
 
+input {
+    width: 3.5em;
+}
+
+label {
+    margin-top: 12px;
+    margin-bottom: 6px;
+}
+
 .numdisplay {
     display: flex;
     justify-content: center;
@@ -23,6 +34,12 @@ img {
     padding-right: 12px;
     padding-top: 8px;
     padding-bottom: 10px;
+}
+
+.sizeinput {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 #game {
@@ -44,4 +61,10 @@ img {
 #resetbutton {
     padding-top: 6px;
     padding-bottom: 6px;
+}
+
+#sizeinputs {
+    display: grid;
+    grid-template-columns: repeat(3, 4.5em);
+    grid-template-rows: auto;
 }

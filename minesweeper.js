@@ -1,12 +1,18 @@
 const board = document.getElementById("tileBoard");
+const button = document.getElementById("resetbutton");
+const tileHTML = '<img src="imgs/hidden.gif" alt="tile" width="32" height="32" draggable="false" (dragstart)="false;">';
+
 const mineCountHundreds = document.getElementById("minehundreds");
 const mineCountTens = document.getElementById("minetens");
 const mineCountOnes = document.getElementById("mineones");
+
 const timerHundreds = document.getElementById("timerhundreds");
 const timerTens = document.getElementById("timertens");
 const timerOnes = document.getElementById("timerones");
-const button = document.getElementById("resetbutton");
-const tileHTML = '<img src="imgs/hidden.gif" alt="tile" width="32" height="32" draggable="false" (dragstart)="false;">';
+
+const widthInput = document.getElementById("widthinput");
+const heightInput = document.getElementById("heightinput");
+const minesInput = document.getElementById("minesinput");
 
 // Why does JS not have enums??
 const gameNotStarted = 0;
@@ -18,46 +24,51 @@ var leftMouseDown = false;
 var rightMouseDown = false;
 var buttonMouseDown = false;
 var gameState = gameNotStarted;
-const mineCount = 10;
+var width = 9;
+var height = 9;
+board.style = "grid-template-columns: repeat(" + width + ", auto); grid-template-rows: repeat(" + height + ", auto);";
+var mineCount = 10;
 var flagCount = 0;
-var hiddenTilesRemaining = 71;
 var time = 0;
 var timerInterval = null;
 const tiles = [];
-tiles.length = 81;
+tiles.length = width * height;
+var hiddenTilesRemaining = tiles.length - mineCount;
 
 // Calls func(j) for each j where tiles[j] is a neighbor of tiles[i]
 function forEachNeighbor(i, func, includeCentre = false) {
-    const toprow = i < 9;
-    const bottomrow = i > 71;
-    const leftcolumn = i % 9 == 0;
-    const rightcolumn = i % 9 == 8;
+    const toprow = i < width;
+    const bottomrow = i >= tiles.length - width;
+    const leftcolumn = i % width == 0;
+    const rightcolumn = i % width == width - 1;
 
+    // Order is important here as this is used for array splicing
     if (!bottomrow) {
-        if (!rightcolumn) {func(i+10);}
-        func(i+9);
-        if (!leftcolumn) {func(i+8);}
+        if (!rightcolumn) {func(i+width+1);}
+        func(i+width);
+        if (!leftcolumn) {func(i+width-1);}
     }
     if (!rightcolumn) {func(i+1);}
     if (includeCentre) {func(i);}
     if (!leftcolumn) {func(i-1);}
     if (!toprow) {
-        if (!rightcolumn) {func(i-8);}
-        func(i-9);
-        if (!leftcolumn) {func(i-10);}
+        if (!rightcolumn) {func(i-width+1);}
+        func(i-width);
+        if (!leftcolumn) {func(i-width-1);}
     }
 }
 
 function createBombs(startI) {
-    // Create 10 bombs
+    // Create (mineCount) bombs
 
-    // Could just choose 10 random positions, repeating if there's already a bomb there,
+    // Could just choose (mineCount) random positions, repeating if there's already a bomb there,
     // but this method could lag on large board where nearly every tile is a bomb.
     // Therefore, create a list containing all available tile indexes,
-    // then pop 10 elements at random, where tiles[elem] will become a bomb
+    // then pop (mineCount) elements at random, where tiles[elem] will become a bomb
 
     const indexes = []
-    for (i = 0; i < 81; i++) {
+    indexes.length = tiles.length
+    for (i = 0; i < indexes.length; i++) {
         indexes[i] = i;
     }
 
@@ -73,7 +84,7 @@ function createBombs(startI) {
 }
 
 function updateMineCount() {
-    let remainingMines = mineCount - flagCount;
+    const remainingMines = mineCount - flagCount;
     if (remainingMines < 0) {
         mineCountHundreds.src = "imgs/number-.gif";
     } else {
@@ -115,7 +126,7 @@ class Tile {
         this.index = i;
         this.hidden = true;
         this.flagged = false;
-        this._tile = tile // The HTML <img> object
+        this.tile = tile // The HTML <img> object
         this.value = 0;
         this.bomb = false;
     }
@@ -123,7 +134,7 @@ class Tile {
     reset() {
         this.hidden = true;
         this.flagged = false;
-        this._tile.src = "imgs/hidden.gif";
+        this.tile.src = "imgs/hidden.gif";
         this.value = 0;
         this.bomb = false;
     }
@@ -135,10 +146,10 @@ class Tile {
     flag() {
         if (this.hidden) {
             if (this.flagged) {
-                this._tile.src = "imgs/hidden.gif"
+                this.tile.src = "imgs/hidden.gif"
                 flagCount--;
             } else {
-                this._tile.src = "imgs/flag.gif";
+                this.tile.src = "imgs/flag.gif";
                 flagCount++;
             }
             this.flagged = !this.flagged;
@@ -147,13 +158,13 @@ class Tile {
 
     hover() {
         if (this._canReveal()) {
-            this._tile.src = "imgs/0.gif";
+            this.tile.src = "imgs/0.gif";
         }
     }
 
     unhover() {
         if (this._canReveal()) {
-            this._tile.src = "imgs/hidden.gif";
+            this.tile.src = "imgs/hidden.gif";
         }
     }
 
@@ -161,10 +172,10 @@ class Tile {
         if (this._canReveal()) {
             this.hidden = false;
             if (this.bomb) {
-                this._tile.src = "imgs/bomb-clicked.gif";
+                this.tile.src = "imgs/bomb-clicked.gif";
                 gameState = gameLost;
             } else {
-                this._tile.src = "imgs/" + this.value + ".gif";
+                this.tile.src = "imgs/" + this.value + ".gif";
                 if (this.value == 0) {
                     forEachNeighbor(this.index, function(j) {tiles[j].reveal();});
                 }
@@ -180,71 +191,21 @@ class Tile {
     revealBomb() {
         if (this.bomb) {
             if (this.hidden && !this.flagged) {
-                this._tile.src = "imgs/bomb.gif";
+                this.tile.src = "imgs/bomb.gif";
             }
         } else if (this.flagged) {
-            this._tile.src = "imgs/flag-wrong.gif";
+            this.tile.src = "imgs/flag-wrong.gif";
         }
     }
 
     showFlag() {
         if (this.bomb) {
-            this._tile.src = "imgs/flag.gif";
+            this.tile.src = "imgs/flag.gif";
         }
     }
 }
 
-document.onmouseup = function(event) {
-    if (event.button == 0 || event.button == 2) {
-        setButtonImage();
-        leftMouseDown = false;
-        rightMouseDown = false;
-        buttonMouseDown = false;
-    }
-}
-
-button.onmousedown = function(event) {
-    if (event.button == 0) {
-        buttonMouseDown = true;
-        setButtonPressedImage();
-    }
-}
-
-button.onmouseenter = function(event) {
-    if (buttonMouseDown) {
-        setButtonPressedImage();
-    }
-}
-
-button.onmouseleave = function(event) {
-    if (buttonMouseDown) {
-        setButtonImage();
-    }
-}
-
-button.onmouseup = function(event) {
-    if (buttonMouseDown && event.button == 0) {
-        // Reset the board
-        for (let i = 0; i < 81; i++) {
-            tiles[i].reset();
-        }
-
-        gameState = gameNotStarted;
-        flagCount = 0;
-        hiddenTilesRemaining = 71;
-        updateMineCount();
-
-        if (timerInterval != null) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        time = -1; // updateTimer() increments it by 1
-        updateTimer();
-    }
-}
-
-// Create the tiles
-for (let i = 0; i < 81; i++) {
+function createTile(i) {
     board.insertAdjacentHTML("beforeend", tileHTML);
     tiles[i] = new Tile(i, board.children[i]);
 
@@ -299,13 +260,13 @@ for (let i = 0; i < 81; i++) {
             if (gameState == gameLost) {
                 clearInterval(timerInterval);
                 timerInterval = null;
-                for (let i = 0; i < 81; i++) {
+                for (let i = 0; i < tiles.length; i++) {
                     tiles[i].revealBomb();
                 }
             } else if (gameState == gameWon) {
                 clearInterval(timerInterval);
                 timerInterval = null;
-                for (let i = 0; i < 81; i++) {
+                for (let i = 0; i < tiles.length; i++) {
                     tiles[i].showFlag();
                     flagCount = mineCount;
                     updateMineCount();
@@ -333,4 +294,89 @@ for (let i = 0; i < 81; i++) {
     }
 }
 
-updateMineCount();
+document.onmouseup = function(event) {
+    if (event.button == 0 || event.button == 2) {
+        setButtonImage();
+        leftMouseDown = false;
+        rightMouseDown = false;
+        buttonMouseDown = false;
+    }
+}
+
+button.onmousedown = function(event) {
+    if (event.button == 0) {
+        buttonMouseDown = true;
+        setButtonPressedImage();
+    }
+}
+
+button.onmouseenter = function(event) {
+    if (buttonMouseDown) {
+        setButtonPressedImage();
+    }
+}
+
+button.onmouseleave = function(event) {
+    if (buttonMouseDown) {
+        setButtonImage();
+    }
+}
+
+button.onmouseup = function(event) {
+    if (buttonMouseDown && event.button == 0) {
+        // Check the size inputs
+        if (isNaN(widthInput.valueAsNumber) || widthInput.valueAsNumber < 8) {
+            widthInput.value = 8;
+        }
+        width = widthInput.valueAsNumber;
+
+        if (isNaN(heightInput.valueAsNumber) || heightInput.valueAsNumber < 1) {
+            heightInput.value = 1;
+        }
+        height = heightInput.valueAsNumber;
+
+        if (isNaN(minesInput.valueAsNumber) || minesInput.valueAsNumber < 1) {
+            minesInput.value = 1;
+        } else if (minesInput.valueAsNumber >= width * height) {
+            minesInput.value = width * height - 1;
+        }
+        mineCount = minesInput.valueAsNumber;
+
+        // Fix board size and reset state
+        board.style = "grid-template-columns: repeat(" + width + ", auto); grid-template-rows: repeat(" + height + ", auto);";
+
+        if (tiles.length > width * height) {
+            for (let i = width * height; i < tiles.length; i++) {
+                tiles[i].tile.remove();
+            }
+            tiles.length = width * height;
+        }
+
+        for (let i = 0; i < tiles.length; i++) {
+            tiles[i].reset();
+        }
+
+        if (tiles.length < width * height) {
+            for (let i = tiles.length; i < width * height; i++) {
+                createTile(i);
+            }
+        }
+
+        gameState = gameNotStarted;
+        flagCount = 0;
+        hiddenTilesRemaining = tiles.length - mineCount;
+        updateMineCount();
+
+        if (timerInterval != null) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        time = -1; // updateTimer() increments it by 1
+        updateTimer();
+    }
+}
+
+// Create the tiles
+for (let i = 0; i < tiles.length; i++) {
+    createTile(i);
+}
