@@ -53,8 +53,8 @@ function createBombs(startI) {
 
     // Could just choose 10 random positions, repeating if there's already a bomb there,
     // but this method could lag on large board where nearly every tile is a bomb.
-    // Therefore, create a list containing all tile indexes,
-    // randomise the order, then plant bombs on the 10 first elements
+    // Therefore, create a list containing all available tile indexes,
+    // then pop 10 elements at random, where tiles[elem] will become a bomb
 
     const indexes = []
     for (i = 0; i < 81; i++) {
@@ -64,19 +64,11 @@ function createBombs(startI) {
     // Remove tiles around start tile
     forEachNeighbor(startI, function(j) {indexes.splice(j, 1);}, true);
 
-    // Randomise
-    // Only have to randomise first (mineCount) elements
-    for (i = 0; i < mineCount; i++) {
-        const tmp = indexes[i];
-        const j = Math.round(Math.random() * (indexes.length - 1));
-        indexes[i] = indexes[j];
-        indexes[j] = tmp;
-    }
-
     // Create bombs
     for (i = 0; i < mineCount; i++) {
-        tiles[indexes[i]].bomb = true;
-        forEachNeighbor(indexes[i], function(j) {tiles[j].value++;});
+        const j = indexes.splice(Math.floor(Math.random() * indexes.length), 1)[0];
+        tiles[j].bomb = true;
+        forEachNeighbor(j, function(k) {tiles[k].value++;});
     }
 }
 
