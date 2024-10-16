@@ -7,6 +7,8 @@ Big button at the top starts a new game.
 This project served as my introduction to JavaScript.
 I wanted to try pure JS without any NodeJS or React etc. so that I could properly learn the language.
 
+Images were taken from [https://minesweeperonline.com/#](https://minesweeperonline.com/#)
+
 ## TODO
 
 - Make timer more accurate (currently uses setInterval which has drifting issues)
