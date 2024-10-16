@@ -68,3 +68,8 @@ label {
     grid-template-columns: repeat(3, 4.5em);
     grid-template-rows: auto;
 }
+
+#scaleinput {
+    margin-left: 10px;
+    margin-top: 1em;
+}

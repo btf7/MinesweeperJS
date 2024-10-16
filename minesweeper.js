@@ -1,6 +1,8 @@
+const game = document.getElementById("game");
 const board = document.getElementById("tileBoard");
 const button = document.getElementById("resetbutton");
-const tileHTML = '<img src="imgs/hidden.gif" alt="tile" width="32" height="32" draggable="false" (dragstart)="false;">';
+const tileHTML = '<img src="imgs/hidden.gif" alt="tile" draggable="false" (dragstart)="false;">';
+var tileSize = 32;
 
 const mineCountHundreds = document.getElementById("minehundreds");
 const mineCountTens = document.getElementById("minetens");
@@ -13,6 +15,8 @@ const timerOnes = document.getElementById("timerones");
 const widthInput = document.getElementById("widthinput");
 const heightInput = document.getElementById("heightinput");
 const minesInput = document.getElementById("minesinput");
+
+const scaleInput = document.getElementById("scaleinput");
 
 // Why does JS not have enums??
 const gameNotStarted = 0;
@@ -221,6 +225,8 @@ class Tile {
 
 function createTile(i) {
     board.insertAdjacentHTML("beforeend", tileHTML);
+    board.children[i].style.width = tileSize + "px";
+    board.children[i].style.height = tileSize + "px";
     tiles[i] = new Tile(i, board.children[i]);
 
     board.children[i].onmousedown = function(event) {
@@ -393,4 +399,56 @@ button.onmouseup = function(event) {
 // Create the tiles
 for (let i = 0; i < tiles.length; i++) {
     createTile(i);
+}
+
+scaleInput.onchange = function(event) {
+    if (isNaN(scaleInput.valueAsNumber)) {
+        scaleInput.value = 2;
+    }
+    const scale = scaleInput.valueAsNumber
+
+    // Borders
+
+    Array.from(game.children).forEach(function(elem) {
+        if (elem.localName == "img") {
+            if (elem.style.width != "100%") {elem.style.width = 10 * scale + "px";}
+            if (elem.style.height != "100%") {elem.style.height = 10 * scale + "px";}
+        }
+    });
+
+    // Top bar
+
+    mineCountHundreds.width = 13 * scale;
+    mineCountHundreds.height = 23 * scale;
+    mineCountTens.width = 13 * scale;
+    mineCountTens.height = 23 * scale;
+    mineCountOnes.width = 13 * scale;
+    mineCountOnes.height = 23 * scale;
+
+    timerHundreds.width = 13 * scale;
+    timerHundreds.height = 23 * scale;
+    timerTens.width = 13 * scale;
+    timerTens.height = 23 * scale;
+    timerOnes.width = 13 * scale;
+    timerOnes.height = 23 * scale;
+
+    Array.from(document.getElementsByClassName("numdisplay")).forEach(function(elem) {
+        elem.style.paddingLeft = 6 * scale + "px";
+        elem.style.paddingRight = 6 * scale + "px";
+        elem.style.paddingTop = 4 * scale + "px";
+        elem.style.paddingBottom = 5 * scale + "px";
+    })
+
+    button.width = 26 * scale;
+    button.height = 26 * scale;
+    button.style.paddingTop = 3 * scale + "px";
+    button.style.paddingBottom = 3 * scale + "px";
+
+    // Tiles
+
+    tileSize = 16 * scale;
+    for (let i = 0; i < tiles.length; i++) {
+        tiles[i].tile.style.width = tileSize + "px";
+        tiles[i].tile.style.height = tileSize + "px";
+    }
 }
