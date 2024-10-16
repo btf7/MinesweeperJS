@@ -16,6 +16,10 @@ const widthInput = document.getElementById("widthinput");
 const heightInput = document.getElementById("heightinput");
 const minesInput = document.getElementById("minesinput");
 
+const novicePresetButton = document.getElementById("novicepreset");
+const skilledPresetButton = document.getElementById("skilledpreset");
+const expertPresetButton = document.getElementById("expertpreset");
+
 const scaleInput = document.getElementById("scaleinput");
 
 // Why does JS not have enums??
@@ -396,11 +400,6 @@ button.onmouseup = function(event) {
     }
 }
 
-// Create the tiles
-for (let i = 0; i < tiles.length; i++) {
-    createTile(i);
-}
-
 scaleInput.onchange = function(event) {
     if (isNaN(scaleInput.valueAsNumber)) {
         scaleInput.value = 2;
@@ -451,4 +450,27 @@ scaleInput.onchange = function(event) {
         tiles[i].tile.style.width = tileSize + "px";
         tiles[i].tile.style.height = tileSize + "px";
     }
+}
+
+novicePresetButton.onclick = function(event) {
+    widthInput.value = 9;
+    heightInput.value = 9;
+    minesInput.value = 10;
+}
+
+skilledPresetButton.onclick = function(event) {
+    widthInput.value = 16;
+    heightInput.value = 16;
+    minesInput.value = 40;
+}
+
+expertPresetButton.onclick = function(event) {
+    widthInput.value = 30;
+    heightInput.value = 16;
+    minesInput.value = 99;
+}
+
+// Create the tiles
+for (let i = 0; i < tiles.length; i++) {
+    createTile(i);
 }
