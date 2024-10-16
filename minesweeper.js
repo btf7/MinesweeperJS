@@ -73,7 +73,21 @@ function createBombs(startI) {
     }
 
     // Remove tiles around start tile
-    forEachNeighbor(startI, function(j) {indexes.splice(j, 1);}, true);
+    // If there are so many mines that not all surrounding tiles can be clear, only clear the start tile
+
+    // First check if we are in a corner (3 surrounding tiles), edge (5 surrounding tiles) or middle (8 surrounding tiles)
+    let edges = 0;
+    if (startI < width) {edges++;}
+    if (startI >= tiles.length - width) {edges++;}
+    if (startI % width == 0) {edges++;}
+    if (startI % width == width - 1) {edges++;}
+    const cannotClear = (mineCount > tiles.length - 4) || (edges < 2 && mineCount > tiles.length - 6) || (edges == 0 && mineCount > tiles.length - 9);
+
+    if (cannotClear) {
+        indexes.splice(startI, 1);
+    } else {
+        forEachNeighbor(startI, function(j) {indexes.splice(j, 1);}, true);
+    }
 
     // Create bombs
     for (i = 0; i < mineCount; i++) {
